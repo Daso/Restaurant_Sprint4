@@ -26,6 +26,24 @@ gem 'sdoc', '~> 0.4.0', group: :doc
 gem 'therubyracer'
 gem 'less-rails'
 gem 'twitter-bootstrap-rails', '>= 3.2.0', '< 3.2.2'
+
+# Simplified Form Management
+
+gem 'simple_form'
+
+# Authentication Support
+
+gem 'devise'
+
+gem 'devise-bootstrap-views'
+
+# Admin Section Support
+
+gem 'rails_admin'
+
+
+
+
 # Use ActiveModel has_secure_password
 # gem 'bcrypt', '~> 3.1.7'
 
