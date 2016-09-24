@@ -41,7 +41,9 @@ gem 'devise-bootstrap-views'
 
 gem 'rails_admin'
 
+# Attachments Support
 
+gem 'paperclip', '~> 4.3', '>= 4.3.7'
 
 
 # Use ActiveModel has_secure_password
