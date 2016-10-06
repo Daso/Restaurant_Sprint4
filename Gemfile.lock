@@ -63,6 +63,7 @@ GEM
       responders
       warden (~> 1.2.3)
     devise-bootstrap-views (0.0.9)
+    enum_help (0.0.15)
     erubis (2.7.0)
     execjs (2.7.0)
     font-awesome-rails (4.6.3.1)
@@ -221,6 +222,7 @@ DEPENDENCIES
   coffee-rails (~> 4.1.0)
   devise
   devise-bootstrap-views
+  enum_help
   jbuilder (~> 2.0)
   jquery-rails
   less-rails

@@ -1,5 +1,8 @@
 Rails.application.routes.draw do
   
+  resources :reservations
+  resources :reservations, only: [:new, :create]
+  
   get 'menu/index'
   
   get 'menu/category/:id', controller: :menu, action: :category, as: :menu_category
@@ -19,6 +22,10 @@ Rails.application.routes.draw do
   get 'pages/tos'
 
   get 'pages/contact_us'
+  
+  get 'reservations/:id/cancel', controller: :reservations, action: :cancel, as: :cancel_reservation
+
+
 
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
