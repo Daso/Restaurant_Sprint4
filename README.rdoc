@@ -1,3 +1,180 @@
-== README
+Este tutorial tiene por objetivos:
 
-Este es el resultado del tutorial del restaurante
+•	Aprender a realizar cambios en la configuración de un proyecto generado a partir de una copia. •	Adicionar el soporte de archivos adjuntos, en especial imágenes, como atributos de modelos. •	Automatizar la generación de registros pre-establecidos por medio de seeds. •	Implementar rutas personalizadas. •	Implementar una controladora con métodos personalizados. •	Elaborar vistas personalizadas. •	Asumimos que estamos trabajando en un Workspace de Cloud9 y que contamos con una carpeta Development dentro de la carpeta workspace. Sin embargo, aplicando las rutas que correspondan según el caso, los pasos son similares en otro entorno de trabajo basado en unix/linux. Si deseamos trabajar en un entorno con Windows que cuente con mysql y Ruby on Rails, las instrucciones de Ruby on Rails son las mismas, pero hay que ver equivalencias para comandos del OS e instrucciones para iniciar el servicio de MySQL. A través de los siguientes pasos, crearemos la versión 4 de la aplicación en Ruby on Rails para el sitio de la cadena internacional de restaurantes Wok & Wine.
+
+¡A codificar!
+
+Creando el proyecto Adicionando picture para Product
+
+Para configurar la gema paperclip de tal forma que adicione un atributo picture asociado al modelo Product, realizamos los siguientes comandos en consola.
+
+# rails g paperclip product picture
+
+Esto permitirá que los productos tengan un atributo picture que será la imagen asociada a ellos dentro del sitio. Aplicando cambios en la Base de Datos
+
+La gema paperclip nos generó una migración que adiciona el atributo picture como attachment en la tabla products. Para que los cambios se realicen a nivel de la base de datos necesitamos ejecutar:
+
+# rake db:migrate
+
+Modificando el modelo Product para especificar las características de picture Una vez que tenemos la base de datos actualizada con el nuevo atributo, es momento de modificar el modelo Product para establecer las caracteristicas y comportamiento del attachment picture. Para ello abrimos para edición la clase Product.
+
+El primer cambio que realizaremos será la adición de la instrucción has_attached_file :picture. Ésto indica que un objeto de la clase Product tiene ahora un attachment asociado bajo el nombre de picture. Gracias a paperclip al momento del upload del attachment, tenemos la posibilidad de generar más de un estilo de la imagen según nuestros propósitos. En este caso estamos adicionando dos estilos: thumb y medium. El primero es una versión reducida y el segundo una versión con mejor calidad de la imagen. El segundo cambio a realizar se enfoca en las validaciones vía la sentencia validates_attachment. Es importante indicar qué tipo de contenido se puede recibir como attachment, restringiendo el avatar sólo a imágenes en formato JPEG, GIF ó PNG.
+
+Luego de los cambios la clase Product debería apreciarse de la siguiente manera.
+
+class Product < ActiveRecord::Base
+
+belongs_to :category    
+has_attached_file :picture,   
+  styles: { thumb: '100x100>', medium: '300x300>'},   
+  default_url: '/images/:style/missing.png'
+validates_attachment :picture,   
+  content_type: { content_type: ['image/jpeg', 'image/png', 'image/gif'] }
+end
+
+Guardamos los cambios realizados en product.rb.
+
+Copiando archivos de imágenes
+
+Subimos a la carpeta public del proyecto los archivos de imágenes:
+
+spring-roll.jpg moo-goo-gai-pan.jpg ma-po-tofu.jpg homemade-sweet-tea.png koshu.jpg
+
+Estos archivos pueden encontrarse dentro del archivo product_pictures.zip adjunto en esta guía. Dichos archivos de imagen nos serán de utilidad para el siguiente paso al momento de generar los registros paraproducts.
+
+Generando registros pre-establecidos para la aplicación
+
+Dado que tenemos los modelos Category y Product establecidos, es momento de enfocarnos en la información que contendrán. Convertiremos esto en una oportunidad para ilustrar cómo podemos cargar registros en la base de datos de tal forma que la aplicación cuente con dicha información sin requerir una interacción previa de los usuarios. Para ello, abrimos para edición el archivo db/seeds.rb. Adicionamos las siguientes líneas al final del archivo.
+
+# Delete existing products and categories
+
+Product.delete_all Category.delete_all
+
+# Categories
+
+Category.create(name: 'Appetizers', description: 'Start in the best way') Category.create(name: 'Chicken', description: 'Served with fried rice, choice of egg drop soup') Category.create(name: 'Vegetables', description: 'With white rice') Category.create(name: 'Beverages') Category.create(name: 'Wines', description: 'Our exclusive wine selection')
+
+# Products
+
+Product.create(name: 'Spring Roll',
+
+description: 'Mini Spring Roll with 10 pieces',                
+category: Category.find_by(name: 'Appetizers'),               
+picture: File.open("#{Rails.root}/public/spring-roll.jpg"))
+Product.create(name: 'Moo Goo Gai Pan',
+
+category: Category.find_by(name: 'Vegetables'),               
+picture: File.open("#{Rails.root}/public/moo-goo-gai-pan.jpg"))
+Product.create(name: 'Ma Po ToFu',
+
+category: Category.find_by(name: 'Vegetables'),               
+picture: File.open("#{Rails.root}/public/ma-po-tofu.jpg"))
+Product.create(name: 'Homemade Sweet Tea',
+
+category: Category.find_by(name: 'Beverages'),               
+picture: File.open("#{Rails.root}/public/homemade-sweet-tea.png"))
+Product.create(name: 'Koshu',
+
+description: 'The first wine in Japan',               
+category: Category.find_by(name: 'Wines'),               
+picture: File.open("#{Rails.root}/public/koshu.jpg"))
+Con este conjunto de sentencias, estamos generando 5 registros en la tabla categories y 5 registros en la tabla products. Grabamos los cambios en el archivo seeds.rb y a continuación requerimos ejecutar estas instrucciones. Para ello, escribimos el siguiente comando desde la consola:
+
+# rake db:seed
+
+Ahora la información ya se encuentra almacenada en la base de datos, e incluso se ha asociado los attachments indicados para cada producto.
+
+Adicionando un controller para el Menu
+
+En la consola escribimos el siguiente comando para adicionar un controller para el menú con una acción index.
+
+# rails g controller menu index Adicionando la opción en el menú de la aplicación Abrimos para edición el archivo app/views/layouts/_menu.html.erb. Insertamos la siguiente línea, entre la línea de código para la opción de menú “About us” y antes de la línea para la opción “FAQ”:
+
+<li><%= link_to “Our Menu”, menu_index_path %></li>
+
+Guardamos el archivo _menu.html.erb.
+
+Construyendo la vista para la carta de Menú
+
+Los siguientes pasos nos permitirán contar con una vista que presente la carta de menú. Para ello, abrimos para edición la vistaapp/views/menu/index.html.erb y reemplazamos el contenido con las siguientes instrucciones:
+
+<h1>Our Menu</h1> <% @categories.each do |category| %>
+
+<div class="page-header">
+  <h2><%= link_to category.name, menu_category_path(category) %><%= " " %><small><%= category.description %></small></h2>
+ </div>
+<% if category.products %>
+  <div class="row">
+    <% category.products.each do |product| %>
+       <div class="col-sm-6 col-md-4">
+         <div class="thumbnail">
+           <%= image_tag product.picture.url(:medium), class: "img-responsive" %>
+           <div class="caption">
+             <h4><%= product.name %></h4>
+             <p><%= product.description %></p>
+           </div>
+         </div>
+       </div>
+    <% end %>
+   </div>
+<% end %>
+<% end %>
+
+Guardamos los cambios en el archivo index.html.erb. A través de estas sentencias, estamos implementando una vista de los productos que ofrece Wok & Wine, organizados por categorías. Gracias a la inclusión del soporte para el framework Bootstrap, tenemos a nuestra disposición las clases de estilo que forman parte del framework. En esta vista hacemos uso de CSS classes como page-header, row, thumbnail y caption. Nuestra lógica es en esencia bastante simple: Para cada categoría, presentamos a manera de galerías aquellos productos que pertenezcan a dicha categoría, incluyendo la imagen asociada, el nombre y la descripción del producto.
+
+Creando una ruta personalizada
+
+Dentro del conjunto de sentencias que aplicamos a la vista, observamos la presencia de menu_category_path(category). Esto corresponde a una ruta personalizada. La idea es que al presentar la vista, el usuario pueda hacer clic sobre la categoría y debería presentarse una vista con sólo los productos de dicha categoría. Esto permitirá ilustrar cómo construir rutas personalizadas. Abrimos para edición el archivo config/routes.rb. Escribimos la siguiente sentencia, justo debajo de la sentencia get 'menu/index': get 'menu/category/:id', controller: :menu, action: :category, as: :menu_category
+
+Esta instrucción está indicando a Ruby on Rails que a partir de este momento, soporte la recepción de requests cuyo URL tenga el formato menu/category/:id, donde :id es un parámetro que se debe enviar junto con el request. Adicionalmente especificamos que dicho request debe ser tratado por la controladora MenuController. Dentro de esta clase, el método asociado a este request será el método category. Finalmente indicamos que el alias con que se referenciará a esta ruta dentro de la aplicación será menu_category. Como sabemos, en las vistas las rutas se referencian adicionando el sufijo _path, por lo que esta instrucción concuerda con el uso de menu_category_path en la vista app/views/menu/index.html.erb.
+
+Guardamos los cambios en config/routes.rb.
+
+Adicionando un action personalizado a un controller
+
+Continuando con la implementación del feature menu for category, necesitamos contar con un custom action en MenuController. Según indicamos en la modificación de routes.rb, el action debe tener el nombre category. Abrimos para edición el archivo app/controllers/menu_controller.rb. Adicionamos la declaración de este método debajo del método index, por lo que la clase MenuController debería verse de la siguiente manera:
+
+class MenuController < ApplicationController
+
+def index
+  # Obtaining categories collection
+  @categories = Category.all
+end
+def category
+  @category = Category.find(params[:id])
+end
+end
+
+Guardamos los cambios en menu_controller.rb. Podemos apreciar que el action category genera una variable de instancia@category en base al parámetro recibido, la cual será utilizada por la vista correspondiente con el action. Para mantener la compatibilidad con los principios de convention-over-configuration y dejar que Ruby on Rails asocie automáticamente la vista con el action del controller, debemos llamar a la vistacategory.html.erb y ubicar el archivo en la ruta app/views/menu.
+
+Creando la vista personalizada para menu for category
+
+A fin de concluir con esta parte de la experiencia web, necesitamos adicionar al proyecto un nuevo archivo de vista. Para ello escribimos el siguiente comando en la consola, ubicados en la carpeta raíz del proyecto:
+
+# touch app/views/menu/category.html.erb
+
+A continación, abrimos para edición el archivo category.html.erb. Adicionamos a este archivo vacío las siguientes sentencias:
+
+<h1>Our Menu - Category</h1> <div class=“page-header”>
+
+<h2><%= @category.name %><%= " " %><small><%= @category.description %></small></h2>
+</div> <% if @category.products %>
+
+<div class="row">
+  <% @category.products.each do |product| %>
+    <div class="col-sm-6 col-md-4">
+      <div class="thumbnail">
+        <%= image_tag product.picture.url(:medium), class: "img-responsive" %>
+        <div class="caption">
+          <h4><%= product.name %></h4>
+          <p><%= product.description %></p>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>
+<% end %>
+
+Guardamos el archivo category.html.erb. Como se observa, la experiencia es casi idéntica a la del menú estándar. Sin embargo nos permite ilustra cómo podemos construir rutas y acciones personalizadas que incluyan además parámetros, resultando en vistas dinámicas personalizadas. Iniciamos la aplicación con
+
+# rails s -p $PORT -b $IP
